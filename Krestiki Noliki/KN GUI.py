@@ -1,8 +1,25 @@
 import tkinter as tk
+from tkinter import messagebox
 
 buttons = [[None, None, None] for _ in range(3)]
+board = [["","",""],
+         ["","",""],
+         ["","",""]
+         ]
+current_player = "X"
+game_mode = "PvP"
 
-def snow_mode_selection():
+def start_game(mode, window):
+    global game_mode
+    game_mode = mode
+    window.destroy()
+    reset_game()
+    if game_mode == "PvP":
+        current_player_text.config(text=f"Ход игрока: {current_player}")
+    else:
+        current_player_text.config(text=f"Ваш ход (X)")
+
+def show_mode_selection():
     mode_window = tk.Toplevel(window)
     mode_window.title("Режимы:")
     mode_window.resizable(False, False)
@@ -10,16 +27,23 @@ def snow_mode_selection():
     center_window(mode_window)
     mode_window.configure(bg="#1a1a2e")
     mode_window.grab_set()
+    current_player_text.config(text="Выберите режим игры: ")
 
     tk.Label(mode_window,text="Крестики нолики", bg="#1a1a2e", fg="white", font=("Courier", 12, "bold")).pack(pady=(10, 0))
 
     tk.Label(mode_window,text="Выберите Режим игры:", bg="#1a1a2e", fg="white", font=("Courier", 12, "bold")).pack(pady=(10, 0))
 
+    def start_pvp():
+        start_game("PvP", mode_window)
+
+    def start_pvc():
+        start_game("PvC", mode_window)
+
     tk.Button(
         mode_window,
         text="P vs P",
         font=("Courier", 12),
-        ##command=,
+        command=start_pvp,
         width=20,
         cursor="hand2",
         fg="white",
@@ -29,7 +53,7 @@ def snow_mode_selection():
         mode_window,
         text="P vs Computer",
         font=("Courier", 12),
-        ##command=,
+        command=start_pvc,
         width=20,
         cursor="hand2",
         fg="white",
@@ -48,9 +72,83 @@ def center_window(window):
     y = (screen_height - height) // 2
     window.geometry(f"{width}x{height}+{x}+{y}")
 
+def check_winner(player):
+
+    """if board[0][0] and board[0][1] and board[0][2] == player:
+        return True
+    if board[1][0] and board[1][1] and board[1][2] == player:
+        return True
+    if board[2][0] and board[2][1] and board[2][2] == player:
+        return True"""
+
+    for r in range(3):
+        if board[r][0] == board[r][1] == board[r][2] == player:
+            return True
+
+    for c in range(3):
+        if board[0][c] == board[1][c] == board[2][c] == player:
+            return True
+
+    if board[0][0] == board[1][1] == board[2][2] == player:
+        return True
+
+    if board[0][2] == board[1][1] == board[2][0] == player:
+        return True
+
+    return False
+
+def reset_game():
+    global board, current_player
+
+    board = [["", "", ""],
+             ["", "", ""],
+             ["", "", ""]
+             ]
+    current_player = "X"
+    for r in range(3):
+        for c in range(3):
+            buttons[r][c].config(text="")
+
+def check_draw():
+    for r in range(3):
+        for c in range(3):
+            if board[r][c] == "":
+                return False
+    return True
+
+
+
 def make_button(row, colum):
     def click():
-        pass
+        global current_player
+
+        if board[row][colum] != "":
+            return
+
+        board[row][colum] = current_player
+        buttons[row][colum].config(text=current_player)
+
+        if check_winner(current_player):
+            messagebox.showinfo("Победа", f"Победил игрок {current_player}")
+            reset_game()
+            return
+
+        if check_draw():
+            messagebox.showinfo("Ничья", "Произошла ничья!")
+            reset_game()
+            return
+
+
+        if current_player == "X":
+            current_player = "O"
+        else:
+            current_player = "X"
+        current_player_text.config(text=f"Ход игрока: {current_player}")
+
+
+
+
+
     button = tk.Button(
         game_frame,
         text="",
@@ -75,8 +173,8 @@ window.configure(bg="#1a1a2e")
 text1 = tk.Label(text="Крестики нолики", bg="#1a1a2e", fg="white", font=("Courier", 12, "bold"))
 text1.pack(pady=(10,0))
 
-text2 = tk.Label(text="Выберите Режим игры:", bg="#1a1a2e", fg="white", font=("Courier", 12, "bold"))
-text2.pack(pady=(10,0))
+current_player_text = tk.Label(text="Выберите Режим игры:", bg="#1a1a2e", fg="white", font=("Courier", 12, "bold"))
+current_player_text.pack(pady=(10, 0))
 
 game_frame = tk.Frame(window, bg="#1a1a2e")
 game_frame.pack(pady=20)
@@ -93,7 +191,7 @@ button_frame.pack(pady=20)
 new_game_button = tk.Button(
     button_frame,
     text="Новая игра",
-    ##command=,
+    command=reset_game,
     bg="#463075",
     fg="white",
     font=("Courier", 12, "bold"),
@@ -105,15 +203,15 @@ new_game_button.pack(pady=5, padx=10, side="left")
 new_game_button = tk.Button(
     button_frame,
     text="Сменить режим",
-    ##command=,
     bg="#463075",
     fg="white",
     font=("Courier", 12, "bold"),
-    cursor="hand2"
+    cursor="hand2",
+    command=show_mode_selection
 )
 new_game_button.pack(pady=5, padx=10, side="right")
 
 
-window.after(100,snow_mode_selection)
+window.after(100, show_mode_selection)
 
 window.mainloop()
