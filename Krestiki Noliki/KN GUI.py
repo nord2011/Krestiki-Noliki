@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+import random
 
 buttons = [[None, None, None] for _ in range(3)]
 board = [["","",""],
@@ -124,9 +125,25 @@ def make_button(row, colum):
 
         if board[row][colum] != "":
             return
-
-        board[row][colum] = current_player
-        buttons[row][colum].config(text=current_player)
+        if game_mode == "PvP":
+            board[row][colum] = current_player
+            buttons[row][colum].config(text=current_player)
+        if game_mode == "PvC":
+            board[row][colum] = "X"
+            buttons[row][colum].config(text="X")
+            a = 0
+            b = 0
+            while board[a][b] != "":
+                a = random.randint(0, 2)
+                b = random.randint(0, 2)
+            current_player = "O"
+            board[a][b] = "O"
+            buttons[a][b].config(text="O")
+            if check_winner(current_player):
+                messagebox.showinfo("Победа", f"Победил игрок {current_player}")
+                reset_game()
+                return
+            current_player = "X"
 
         if check_winner(current_player):
             messagebox.showinfo("Победа", f"Победил игрок {current_player}")
