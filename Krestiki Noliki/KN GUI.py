@@ -8,7 +8,7 @@ board = [["","",""],
          ["","",""]
          ]
 current_player = "X"
-game_mode = "PvP"
+game_mode = "None"
 
 def start_game(mode, window):
     global game_mode
@@ -118,52 +118,75 @@ def check_draw():
     return True
 
 
+def get_empty_cells():
+    empty_cells = []
+    for r in range(3):
+        for c in range(3):
+            if board[r][c] == "":
+                empty_cells.append((r, c))
+    return empty_cells
+
+def make_move(row,col):
+    global current_player
+
+    board[row][col] = current_player
+    buttons[row][col].config(text=current_player)
+
+    if check_winner(current_player):
+        if game_mode == "PvP":
+            messagebox.showinfo("Победа", f"Победил игрок {current_player}")
+        else:
+            if current_player == "X":
+                messagebox.showinfo("Победа", "Победа игрока")
+            else:
+                messagebox.showinfo("Победа", "Выиграл компьютер")
+        reset_game()
+        return
+
+    if check_draw():
+        messagebox.showinfo("Ничья", "Произошла ничья!")
+        reset_game()
+        return
+
+    if current_player == "X":
+        current_player = "O"
+    else:
+        current_player = "X"
+    if game_mode == "PvP":
+        current_player_text.config(text=f"Ход игрока: {current_player}")
+    else:
+        current_player_text.config(text=f"Ход игрока: X")
+
+
+def game_mode_PvC():
+    list_empty_cells = get_empty_cells()
+    if list_empty_cells:
+        row,col = random.choice(list_empty_cells)
+        make_move(row,col)
+        global current_player
+        current_player = "X"
+
+    current_player_text.config(text=f"Ход игрока: X")
+
 
 def make_button(row, colum):
     def click():
         global current_player
+        if game_mode == "None":
+            show_mode_selection()
+            return
 
         if board[row][colum] != "":
             return
-        if game_mode == "PvP":
-            board[row][colum] = current_player
-            buttons[row][colum].config(text=current_player)
-        if game_mode == "PvC":
-            board[row][colum] = "X"
-            buttons[row][colum].config(text="X")
-            a = 0
-            b = 0
-            while board[a][b] != "":
-                a = random.randint(0, 2)
-                b = random.randint(0, 2)
-            current_player = "O"
-            board[a][b] = "O"
-            buttons[a][b].config(text="O")
-            if check_winner(current_player):
-                messagebox.showinfo("Победа", f"Победил игрок {current_player}")
-                reset_game()
-                return
-            current_player = "X"
 
-        if check_winner(current_player):
-            messagebox.showinfo("Победа", f"Победил игрок {current_player}")
-            reset_game()
+        if game_mode != "PvP" and current_player == "O":
             return
 
-        if check_draw():
-            messagebox.showinfo("Ничья", "Произошла ничья!")
-            reset_game()
-            return
-
-
-        if current_player == "X":
-            current_player = "O"
-        else:
-            current_player = "X"
-        current_player_text.config(text=f"Ход игрока: {current_player}")
-
-
-
+        make_move(row,colum)
+        if game_mode == "PvC" and current_player == "O":
+            current_player_text.config(text=f"Ход Компьютера")
+            ##  Задержка    ##
+            window.after(500, game_mode_PvC)
 
 
     button = tk.Button(
