@@ -39,6 +39,8 @@ def show_mode_selection():
 
     def start_pvc():
         start_game("PvC", mode_window)
+    def start_pvai():
+        start_game("PvAI", mode_window)
 
     tk.Button(
         mode_window,
@@ -52,9 +54,19 @@ def show_mode_selection():
     ).pack(pady=5)
     tk.Button(
         mode_window,
-        text="P vs Computer",
+        text="P vs Computer (Eazy)",
         font=("Courier", 12),
         command=start_pvc,
+        width=20,
+        cursor="hand2",
+        fg="white",
+        bg="#463075"
+    ).pack(pady=5)
+    tk.Button(
+        mode_window,
+        text="P vs AI (Hard)",
+        font=("Courier", 12),
+        command=start_pvai,
         width=20,
         cursor="hand2",
         fg="white",
@@ -126,6 +138,7 @@ def get_empty_cells():
                 empty_cells.append((r, c))
     return empty_cells
 
+
 def make_move(row,col):
     global current_player
 
@@ -163,10 +176,62 @@ def game_mode_PvC():
     if list_empty_cells:
         row,col = random.choice(list_empty_cells)
         make_move(row,col)
-        global current_player
-        current_player = "X"
 
     current_player_text.config(text=f"Ход игрока: X")
+
+def game_mode_PvAI():
+    ## Приоритет 1 ## Можно ли победить сейчас?
+
+    for r in range(3):
+        for c in range(3):
+            if board[r][c] == "":
+                board[r][c] = "O"
+                if check_winner("O"):
+                    board[r][c] = ""
+                    make_move(r, c)
+                    return
+                board[r][c] = ""
+
+    ## Приоритет 2 ## Нужно ли заблокировать другого игрока
+
+    for r in range(3):
+        for c in range(3):
+            if board[r][c] == "":
+                board[r][c] = "X"
+                if check_winner("X"):
+                    board[r][c] = ""
+                    make_move(r, c)
+                    return
+                board[r][c] = ""
+
+    ## Приоритет 3 ## Можно ли занять центр
+
+    if board[1][1] == "":
+        make_move(1,1)
+        return
+
+    ## Приоритет 4 ## Можно ли занять углы
+
+    if board[0][0] == "" or board[0][2] == "" or board[2][0] == "" or board[2][2] == "":
+        empty_cells = []
+        if board[0][0] == "":
+            empty_cells.append((0,0))
+        if board[0][2] ==  "":
+            empty_cells.append((0,2))
+        if board[2][0] == "":
+            empty_cells.append((2, 0))
+        if board[2][2] == "":
+            empty_cells.append((2, 2))
+        row,col = random.choice(empty_cells)
+        make_move(row,col)
+        return
+    ## Приоритет 5 ## Остальное
+
+    list_empty_cells = get_empty_cells()
+    if list_empty_cells:
+        row,col = random.choice(list_empty_cells)
+        make_move(row,col)
+        return
 
 
 def make_button(row, colum):
@@ -187,6 +252,10 @@ def make_button(row, colum):
             current_player_text.config(text=f"Ход Компьютера")
             ##  Задержка    ##
             window.after(500, game_mode_PvC)
+        if game_mode == "PvAI" and current_player == "O":
+            current_player_text.config(text=f"Ход Компьютера")
+            ##  Задержка    ##
+            window.after(500, game_mode_PvAI)
 
 
     button = tk.Button(
